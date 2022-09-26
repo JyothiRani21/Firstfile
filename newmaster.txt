@@ -1,0 +1,1430 @@
+import {LightningElement,track, wire, api} from 'lwc';
+import createContactData from '@salesforce/apex/EmployeeMasterView.createContactData';
+import { getPicklistValues } from 'lightning/uiObjectInfoApi';
+import { getPicklistValuesByRecordType } from 'lightning/uiObjectInfoApi';
+import { getObjectInfo } from 'lightning/uiObjectInfoApi';
+import Contact_OBJECT from '@salesforce/schema/Contact';
+import Salutation_Field from '@salesforce/schema/Contact.Salutation';
+import Role_Field from '@salesforce/schema/Contact.Role__c';
+import Designation_Field from '@salesforce/schema/Contact.Designation__c';
+import BonusFrequency_Field from '@salesforce/schema/Contact.Bonus_Frequency__c';
+import ContactCurrency_Field from '@salesforce/schema/Contact.CurrencyIsoCode';
+import Gender_Field from '@salesforce/schema/Contact.Gender__c';
+import TaxRegime_Field from '@salesforce/schema/Contact.Tax_Regime__c';
+import Status_Field from '@salesforce/schema/Contact.Status__c';
+import MaritalStatus_Field from '@salesforce/schema/Contact.Marital_Status__c';
+import EmpStatus_Field from '@salesforce/schema/Contact.Employee_Status__c';
+import ProbationPeriod_Field from '@salesforce/schema/Contact.Probation_Period__c';
+import PFContribution_Field from '@salesforce/schema/Contact.PF_Contribution__c';
+import Relationship_Field from '@salesforce/schema/Contact.Relationship__c';
+import getAccountsLookup from '@salesforce/apex/EmployeeMasterView.getAccountsLookup';
+import getBaseBranchLookup from '@salesforce/apex/EmployeeMasterView.getBaseBranchLookup';
+import getPUDULookup from '@salesforce/apex/EmployeeMasterView.getPUDULookup';
+import getContactsLookup from '@salesforce/apex/EmployeeMasterView.getContactsLookup';
+import getManagerLookup from '@salesforce/apex/EmployeeMasterView.getManagerLookup';
+import updateContactData from '@salesforce/apex/EmployeeMasterView.updateContactData';
+import {ShowToastEvent} from 'lightning/platformShowToastEvent';
+
+export default class Newemployeemaster extends LightningElement {
+
+    newEmployeepage=true;
+    @api recordtypeidval;
+    @api rownum;
+    recordType;
+    clientcontactbootcampTrainee=false;
+    clientcontact=false;
+    bootcampTrainee=false;
+    dependent=false;
+    freelancePartnerSubcontractors=false;
+
+    isLoading = false;
+
+    //************* */
+   Salutation;
+   FirstNameCon;
+   LastnameCon;
+   record;
+   rowid;
+   AccountName;
+   Active=false;
+   EmployeeNo;
+   EmployeeJoinDate=null;
+   Email;
+   Role;
+   Phone;
+   BankName;
+   BankAccNumber;
+   OfficeLocation;
+   Designation;
+   MonthlyCTC;
+   AnnualCTC;
+   ContactCurrency='INR - Indian Rupee';
+   Gender;
+   Birthdate=null;
+   FatherName;
+   MaritalStatus;
+   Manager;
+   BaseBranch;
+   Zone;
+   Area;
+   CloudTaruExperience;
+   TotalPastExperience;
+   OverallExperience;
+   TotalNumOfProjects;
+
+   TaxRegime='Old Regime';
+   UANnumber;
+   PANnumber;
+   pudu=null;
+   ReportsTo=null;
+   Status='Active';
+   ContactRecordType=null;
+   EmpSkills=[];
+   ConfirmationDate=null;
+   isResigned;
+   BonusFrequency;
+   Password;
+   Department;
+   temporaryAddress;
+   Languages;
+   PaymentType;
+   PersonalMail;
+   FirstName;
+   MiddleName;
+   LastName;
+   DocumentType;
+   AccountHolderName;
+   PFJoinDate=null;
+   EmployeeMasterRec;
+   PFNumber;
+   PFContribution;
+   EmployeeCertifications;
+   AadharNumber;
+   EmployeeCoveredUnderESI=false;
+   EmployeeCoveredUnderLWF=false;
+   EmployeeCoveredUnderPF=false;
+   ESINumber=null;
+   EmployeeUnderEPS=false;
+   IFSC_Code;
+   EmployeeStatus;
+   ProbationPeriod;
+   ResignedDate=null;
+   LeavingDate=null;
+   employeeId=null;
+   HomePhonevalue=null;
+   faxnumvalue=null;
+   PFContributionValue='';
+   Relationship='';
+   Mobile='';
+   endDateValidationMsgTasks = false;
+   leavingDateValidation=false;
+
+   @track salutationOptions=[];
+    @track AccountOptions=[];
+    @track RoleOptions=[];
+    @track DesignationOptions=[];
+    @track ContactCurrencyOptions=[];
+    @track GenderOptions=[];
+    @track TaxRegimeOptions=[];
+    @track PUDUOptions=[];
+    @track ReportsToOptions=[];
+    @track StatusOptions=[];
+    @track EmpSkillsOptions=[];
+    @track MaritalStatusOptions=[];
+    @track PaymentTypeOptions=[];
+    @track ProbationPeriodOptions=[];
+    @track BaseBranchOptions=[];
+    @track ManagerOptions=[];
+    @track EmpStatusOptions=[];
+    @track EmpCertificatesOptions=[];
+    @track PFContributionOptions=[];
+    @track RelationshipOptions=[];
+    
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: Salutation_Field })
+    setSalutationPicklistOptions({error, data}) {
+        if (data) {
+            this.salutationOptions = data.values;
+            console.log('salutationOptions : ' + JSON.stringify(this.salutationOptions));
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: Role_Field })
+    setRolePicklistOptions({error, data}) {
+        if (data) {
+            this.RoleOptions = data.values;
+            console.log('RoleOptions : ' + JSON.stringify(this.RoleOptions));
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: Designation_Field })
+    setDesignationPicklistOptions({error, data}) {
+        if (data) {
+            this.DesignationOptions = data.values;
+            console.log('DesignationOptions : ' + JSON.stringify(this.DesignationOptions));
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: BonusFrequency_Field })
+    setBonusFrequencyOptionsPicklistOptions({error, data}) {
+        if (data) {
+            this.BonusFrequencyOptions = data.values;
+            console.log('BonusFrequencyOptions : ' + JSON.stringify(this.BonusFrequencyOptions));
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: ContactCurrency_Field })
+    setContactCurrencyPicklistOptions({error, data}) {
+        if (data) {
+            this.ContactCurrencyOptions = data.values;
+            console.log('ContactCurrencyOptions : ' + JSON.stringify(this.ContactCurrencyOptions));
+            this.ContactCurrency=data.values[3].value;
+            let ContactCurrencydefault=data.values[3].value;
+            console.log('ContactCurrencyDefault : ' + JSON.stringify(data.values[3].value));
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: Gender_Field })
+    setGenderPicklistOptions({error, data}) {
+        if (data) {
+            this.GenderOptions = data.values;
+            console.log('GenderOptions : ' + JSON.stringify(this.GenderOptions));
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: TaxRegime_Field })
+    setTaxRegimePicklistOptions({error, data}) {
+        if (data) {
+            this.TaxRegimeOptions = data.values;
+            console.log('TaxRegimeOptions : ' + JSON.stringify(this.TaxRegimeOptions));
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: Status_Field })
+    setStatusPicklistOptions({error, data}) {
+        if (data) {
+            this.StatusOptions = data.values;
+            console.log('StatusOptions : ' + JSON.stringify(this.StatusOptions));
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: MaritalStatus_Field })
+    setMaritalStatusPicklistOptions({error, data}) {
+        if (data) {
+            this.MaritalStatusOptions = data.values;
+            console.log('MaritalStatusOptions=>'+JSON.stringify(this.MaritalStatusOptions));
+            
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: ProbationPeriod_Field })
+    setProbationPeriodPicklistOptions({error, data}) {
+        if (data) {
+            this.ProbationPeriodOptions = data.values;
+            console.log('ProbationPeriodOptions=>'+JSON.stringify(this.ProbationPeriodOptions));
+            
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: EmpStatus_Field })
+    setEmpStatusPicklistOptions({error, data}) {
+        if (data) {
+            this.EmpStatusOptions = data.values;
+            console.log('ProbationPeriodOptions=>'+JSON.stringify(this.EmpStatusOptions));
+            
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: PFContribution_Field })
+    setEmpStatusPicklistOptions({error, data}) {
+        if (data) {
+            this.PFContributionOptions = data.values;
+            console.log('PFContributionOptions=>'+JSON.stringify(this.PFContributionOptions));
+            
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: "012000000000000AAA", fieldApiName: Relationship_Field })
+    setRelationshipOptions({error, data}) {
+        if (data) {
+            this.RelationshipOptions = data.values;
+            console.log('RelationshipOptions=>'+JSON.stringify(this.RelationshipOptions));
+            
+        } else if (error) {
+            console.log(error);
+        }
+    }
+
+
+    @wire(getAccountsLookup) getAccounts({data, error}){
+        if(data){
+            console.log('Accounts List: '+ JSON.stringify(data));               
+            for (var i = 0; i < data.length; i++) {
+                this.AccountOptions.push({label: data[i].Name, value: data[i].Id});                    
+            }            
+        }
+        else if(error){
+            console.log(error);
+            }
+    }
+
+    @wire(getBaseBranchLookup) getBaseBranch({data, error}){
+        if(data){
+            console.log('getBaseBranchLookup List: '+ JSON.stringify(data));               
+            for (var i = 0; i < data.length; i++) {
+                this.BaseBranchOptions.push({label: data[i].Name, value: data[i].Id});                    
+            }            
+        }
+        else if(error){
+            console.log(error);
+            }
+    }
+
+    @wire(getManagerLookup) getManager({data, error}){
+        if(data){
+            console.log('getManagerLookup List: '+ JSON.stringify(data));               
+            for (var i = 0; i < data.length; i++) {
+                this.ManagerOptions.push({label: data[i].Name, value: data[i].Id});                    
+            }            
+        }
+        else if(error){
+            console.log(error);
+            }
+    }
+
+    @wire(getPUDULookup) getPUDU({data, error}){
+        if(data){
+            console.log('PUDU List: '+ JSON.stringify(data));               
+            for (var i = 0; i < data.length; i++) {
+                this.PUDUOptions.push({label: data[i].Name, value: data[i].Id});                    
+            }            
+        }
+        else if(error){
+            console.log(error);
+            }
+    }
+
+    @wire(getContactsLookup) getReportsTo({data, error}){
+        if(data){
+            console.log('ReportsToOptions:'+ JSON.stringify(data));               
+            for (var i = 0; i < data.length; i++) {
+                this.ReportsToOptions.push({label: data[i].Name, value: data[i].Id});                    
+            }            
+        }
+        else if(error){
+            console.log(error);
+            }
+    }
+
+    recordtyperesult;
+    @wire(getObjectInfo, { objectApiName: Contact_OBJECT })
+        conObjectInfo(result) {
+            this.recordtyperesult=result;
+            if(result.data) {
+                let optionsValues = [];
+                // map of record type Info
+                const rtInfos = result.data.recordTypeInfos;
+    
+                // getting map values
+                let rtValues = Object.values(rtInfos);
+    
+                for(let i = 0; i < rtValues.length; i++) {
+                    if(rtValues[i].name !== 'Master') {
+                        optionsValues.push({
+                            label: rtValues[i].name,
+                            value: rtValues[i].recordTypeId
+                        })
+                    }
+                }
+    
+                this.recorttypeoptions = optionsValues;
+            }
+            else if(result.error) {
+                window.console.log('Error ===> '+JSON.stringify(result.error));
+            }
+        }
+
+     recordtypehandleChange(event) {
+            this.selectedValue = event.detail.value;
+            console.log('selected value=>',this.selectedValue);
+    }
+
+    EmpUnderESI;
+    EmpUnderLWF;
+    EmpUnderPF;
+    PfContribution=true;
+    handleCheckbox(event) {
+        if(event.target.name=='EmployeeUnderESI')
+        {
+            this.EmployeeCoveredUnderESI=event.target.checked;
+        }
+        if(event.target.name=='EmployeeUnderLWF')
+        {
+            this.EmployeeCoveredUnderLWF=event.target.checked;
+        }
+        if(event.target.name=='EmployeeUnderPF')
+        {
+            this.EmployeeCoveredUnderPF=event.target.checked;
+            console.log('EmployeeCoveredUnderPF=>',this.EmployeeCoveredUnderPF);
+            if(this.EmployeeCoveredUnderPF==true){
+                this.PfContribution=false;
+            }
+            if(this.EmployeeCoveredUnderPF==false){
+                this.PfContribution=true;
+                this.PFContributionValue='';
+            }
+            console.log('PfContribution=>',this.PfContribution);
+        }
+        if(event.target.name=='active')
+        {
+            this.Active=event.target.checked;
+        }
+        if(event.target.name=='EmployeeUnderEPS')
+        {
+            this.EmployeeUnderEPS=event.target.checked;
+        }
+        
+        
+    }
+    accountid;
+    handleAccountSelect(event){
+        this.accountid=event.target.value;
+    }
+    basebranchid;
+    handleBaseBranchSelect(event){
+        this.basebranchid=event.target.value;
+    }
+    managerIdselect;
+    handleManagerSelect(event){
+        this.managerIdselect=event.target.value;
+    }
+
+    puduIdselect;
+    handleRelatedPUDU(event){
+        this.puduIdselect=event.target.value;
+    }
+
+    reportsToselect;
+    handleReportsTo(event){
+        this.reportsToselect=event.target.value;
+    }
+
+    skills=[];
+    skillSelected=[];
+    certificates=[];
+    
+    empMasterId='';
+    handleEmployeeMaster(event){
+        this.empMasterId=event.target.value;
+    }
+
+    handleinput(event){
+        if(event.target.name=='firstname'){
+            this.FirstNameCon=event.target.value;
+        }
+        if(event.target.name=='lastname'){
+            this.LastnameCon=event.target.value;
+        }
+        if(event.target.name=='HomePhone'){
+            this.HomePhonevalue=event.target.value;
+        }
+        if(event.target.name=='fax'){
+            this.faxnumvalue=event.target.value;
+        }
+        if(event.target.name=='employeeid'){
+            this.employeeId=(event.target.value)||null;
+        }
+        if(event.target.name=='empNumber'){
+            this.empNo=event.target.value;
+        }
+        if(event.target.name=='gender'){
+            this.gender=event.target.value;
+        }
+        if(event.target.name=='maritalstatus'){
+            this.MaritalStatus=event.target.value;
+        }
+        if(event.target.name=='email'){
+            this.Email=event.target.value;
+        }
+        if(event.target.name=='phone'){
+            this.Phone=event.target.value;
+        }
+        if(event.target.name=='fathername'){
+            this.FatherName=event.target.value;
+        }
+        if(event.target.name=='Department'){
+            this.Department=event.target.value;
+        }
+        if(event.target.name=='designation'){
+            this.Designation=event.target.value;
+        }
+        if(event.target.name=='role'){
+            this.Role=event.target.value;
+        }
+        if(event.target.name=='ofclocation'){
+            this.OfficeLocation=event.target.value;
+        }
+        if(event.target.name=='empjoindate'){
+            this.EmployeeJoinDate=event.target.value;
+        }
+        if(event.target.name=='resigneddate'){
+            this.ResignedDate=event.target.value;
+        }
+        if(event.target.name=='leavingdate'){
+            this.LeavingDate=event.target.value;
+        }
+        if(event.target.name=='bankAcNum'){
+            this.BankAccNumber=event.target.value;
+        }
+        if(event.target.name=='contactCurrency'){
+            this.ContactCurrency=event.target.value;
+        }
+        if(event.target.name=='ifsccode'){
+            this.IFSC_Code=event.target.value;
+        }
+        if(event.target.name=='empstatus'){
+            this.EmployeeStatus=event.target.value;
+        }
+        if(event.target.name=='taxregime'){
+            this.TaxRegime=event.target.value;
+        }
+        if(event.target.name=='uan'){
+            this.UANnumber=event.target.value;
+        }
+        if(event.target.name=='pan'){
+            this.PANnumber=event.target.value;
+        }
+        if(event.target.name=='status'){
+            this.Status=event.target.value;
+        }
+        if(event.target.name=='bonusfr'){
+            this.BonusFrequency=event.target.value;
+        }
+        if(event.target.name=='langs'){
+            this.Languages=event.target.value;
+        }
+        if(event.target.name=='persEmail'){
+            this.PersonalMail=event.target.value;
+        }
+        if(event.target.name=='firstnametwo'){
+            this.FirstName=event.target.value;
+        }
+        if(event.target.name=='middlenametwo'){
+            this.MiddleName=event.target.value;
+        }
+        if(event.target.name=='lastnametwo'){
+            this.LastName=event.target.value;
+        }
+        if(event.target.name=='AcHoldername'){
+            this.AccountHolderName=event.target.value;
+        }
+        if(event.target.name=='pfNum'){
+            this.PFNumber=event.target.value;
+        }
+        if(event.target.name=='aadhar'){
+            this.AadharNumber=event.target.value;
+        }
+        if(event.target.name=='probperiod'){
+            this.ProbationPeriod=event.target.value;
+        }
+        if(event.target.name=='pfCont'){
+            this.PFContributionValue=event.target.value;
+        }
+        if(event.target.name=='Relationship'){
+            this.Relationship=event.target.value;
+        }
+        if(event.target.name=='ESINumber'){
+            this.ESINumber=event.target.value;
+        }
+        if(event.target.name=='Mobile'){
+            this.Mobile=event.target.value;
+        }
+    }
+    permstreet=null;
+    permcity=null;
+    permcountry=null;
+    permpostalcode=null;
+    permstate=null;
+    handleAddress(event){
+        this.permstreet=event.target.street;
+        this.permcity=event.target.city;
+        this.permcountry=event.target.country;
+        this.permpostalcode=event.target.postalCode;
+        this.permstate=event.target.province;
+        console.log('Street => ' , this.street);
+        console.log('City => ' , this.city);
+        console.log('Province => ' , this.state);
+        console.log('Country => ' , this.country);
+        console.log('postal Code => ' , this.postalcode);
+    }
+
+    connectedCallback()
+    {
+      console.log('connected call back of child');
+       console.log('recordtypeid=>',this.recordtypeidval);
+       if(this.recordtypeidval=='0122y000000LMuaAAG')
+            {
+                this.recordType='Client Contact';
+            }
+        if(this.recordtypeidval=='0122y000000LNJpAAO')
+            {
+                //bootcamptrainee=0122y000000LNJpAAO;
+                this.recordType='Bootcamp Trainee';
+                }
+        if(this.recordtypeidval=='0122y000000LMufAAG' || this.recordtypeidval=='0122y000000LNFtAAO')
+            {
+                this.recordType='Employee';
+                //Candidate='0122y000000LNFtAAO';
+            }
+            if(this.recordtypeidval=='0122y000000LNFtAAO')
+            {
+                this.recordType='Candidate';
+                //Candidate='0122y000000LNFtAAO';
+            }
+        if(this.recordtypeidval=='0122y000000LNFuAAO')
+            {
+                this.recordType='Dependent';
+            }
+        if(this.recordtypeidval=='0122y000000LNFvAAO' || this.recordtypeidval=='0122y000000LNFwAAO' || this.recordtypeidval=='0122y000000LNFxAAO')
+            {
+                //freelancers=0122y000000LNFvAAO;partners=0122y000000LNFwAAO;subcontractors=0122y000000LNFxAAO;
+            this.recordType='Freelancers';
+            }
+            if(this.recordtypeidval=='0122y000000LNFwAAO' )
+            {
+                //freelancers=0122y000000LNFvAAO;partners=0122y000000LNFwAAO;subcontractors=0122y000000LNFxAAO;
+            this.recordType='Partners';
+            }
+            if(this.recordtypeidval=='0122y000000LNFxAAO')
+            {
+                //freelancers=0122y000000LNFvAAO;partners=0122y000000LNFwAAO;subcontractors=0122y000000LNFxAAO;
+            this.recordType='Subcontractors';
+            }
+        console.log('recordtype=>',this.recordType);
+        this.getRecordtype();
+        this.ContactRecordType=this.recordType;
+        }            
+
+    getRecordtype(){
+        if(this.recordType=='Client Contact')
+            {
+                this.clientcontactbootcampTrainee=true;
+                this.clientcontact=true;
+                this.bootcampTrainee=false;
+                this.dependent=false;
+                this.freelancePartnerSubcontractors=false;
+            }
+            if(this.recordType=='Bootcamp Trainee')
+            {
+                this.clientcontact=false;
+                this.clientcontactbootcampTrainee=true;
+                this.bootcampTrainee=true;
+                this.dependent=false;
+                this.freelancePartnerSubcontractors=false;
+            }
+            if(this.recordType=='Employee' || this.recordType=='Candidate')
+            {
+                this.clientcontact=false;
+                this.clientcontactbootcampTrainee=false;
+                this.bootcampTrainee=false;
+                this.employeeCandidate=true;
+                this.dependent=false;
+                this.freelancePartnerSubcontractors=false;
+            }
+            if(this.recordType=='Dependent')
+            {
+                this.clientcontact=false;
+                this.clientcontactbootcampTrainee=false;
+                this.bootcampTrainee=false;
+                this.employeeCandidate=false;
+                this.dependent=true;
+                this.freelancePartnerSubcontractors=false;
+            }
+            if(this.recordType=='Freelancers' || this.recordType=='Partners' || this.recordType=='Subcontractors')
+            {
+                this.clientcontact=false;
+                this.clientcontactbootcampTrainee=false;
+                this.bootcampTrainee=false;
+                this.employeeCandidate=false;
+                this.dependent=false;
+                this.freelancePartnerSubcontractors=true;
+            }
+    
+    }
+
+    handleSave()
+    {
+        const allValid = [...this.template.querySelectorAll('lightning-input, lightning-combobox')].reduce((validSoFar, inputFields) => {
+            inputFields.reportValidity();
+            return validSoFar && inputFields.checkValidity();
+        }, true); 
+        console.log('allvalid=>',allValid);
+        if(this.Salutation==undefined){
+            this.Salutation=null;
+        }
+        if(this.Email==undefined){
+            this.Email=null;
+        }
+        if(this.Phone==undefined){this.Phone=null;}
+        if(this.Department==undefined){this.Department=null;}
+        if(this.Designation==undefined){this.Designation=null;}
+        if(this.Role==undefined){this.Role=null;}
+        if(this.OfficeLocation==undefined){this.OfficeLocation=null;}
+        if(this.basebranchid==undefined){this.basebranchid=null;}
+       // if(this.EmployeeJoinDate==undefined){this.EmployeeJoinDate=null;}
+        if(this.BankName==undefined){this.BankName=null;}
+        if(this.ContactCurrency==undefined){this.ContactCurrency=null;}
+        if(this.MonthlyCTC==undefined){this.MonthlyCTC=null;}
+        if(this.AnnualCTC==undefined){this.AnnualCTC=null;}
+        if(this.managerIdselect==undefined){this.managerIdselect=null;}
+        if(this.IFSC_Code==undefined){this.IFSC_Code=null;}
+        if(this.EmployeeStatus==undefined){this.EmployeeStatus=null;}
+        if(this.TaxRegime==undefined){this.TaxRegime=null;}
+        if(this.UANnumber==undefined){this.UANnumber=null;}
+        if(this.PANnumber==undefined){this.PANnumber=null;}
+        if(this.puduIdselect==undefined){this.puduIdselect=null;}
+        if(this.reportsToselect==undefined){this.reportsToselect=null;}
+        if(this.Status==undefined){this.Status=null;}
+        if(this.skills==undefined){this.skills=null;}
+        if(this.BonusFrequency==undefined){this.BonusFrequency=null;}
+        if(this.skills==undefined){this.skills=null;}
+     /*   if(this.skills==undefined){this.skills=null;}
+        if(this.skills==undefined){this.skills=null;}
+        if(this.skills==undefined){this.skills=null;}
+        if(this.skills==undefined){this.skills=null;}
+        if(this.skills==undefined){this.skills=null;}
+        if(this.skills==undefined){this.skills=null;}*/
+
+        
+        console.log('ContactCurrency=>',this.ContactCurrency);
+        console.log('this.IFSC_Code=>',this.IFSC_Code);
+        console.log('this.Designation=>',this.Designation);
+        console.log('this.EmployeeJoinDate=>',this.EmployeeJoinDate);
+        console.log('this.ResignedDate=>',this.ResignedDate);
+        console.log('this.LeavingDate=>',this.LeavingDate);
+       /* console.log('this.EmployeeCoveredUnderLWF=>',this.EmployeeCoveredUnderLWF);
+        console.log('this.EmployeeCoveredUnderPF=>',this.EmployeeCoveredUnderPF);*/
+
+        if(this.ResignedDate != null && this.EmployeeJoinDate != null){
+            if(this.ResignedDate < this.EmployeeJoinDate){
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Error',
+                        message: 'Resignation Date should be greater than Joining Date..!',
+                        variant: 'Error'
+                    })
+                );
+                allValid = false;              
+            }
+        }
+        console.log('747allvalid=>',allValid);
+        if(this.LeavingDate != null && this.ResignedDate != null){
+            if(this.LeavingDate  < this.ResignedDate){
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Error',
+                        message: 'Leaving Date should be greater than Resignation Date..!',
+                        variant: 'Error'
+                    })
+                );
+                console.log('error with leaving and resign date');
+                allValid = false;              
+            }
+           
+        }
+        console.log('764allvalid=>',allValid);
+        this.isLoading = true;
+        if (allValid) {      
+            let parameterObject = {
+                Salutation: this.Salutation,  
+             //   Name:this.FirstNameCon+this.LastnameCon,
+                firstname:this.FirstNameCon,
+                lastname: this.LastnameCon,  
+                AccountId: this.accountid,
+                empNo:this.empNo,  
+                activeState:this.Active,
+                gender:this.gender, 
+                birtdate: (this.Birthdate==undefined)?null:this.Birthdate, 
+                maritalstat:this.MaritalStatus, 
+                email:this.Email, 
+                phone:this.Phone, 
+                father:this.FatherName, 
+                dept:this.Department, 
+                designtn:this.Designation, 
+                roleData:this.Role, 
+                OfcLocatn:this.OfficeLocation, 
+                basebranch: this.basebranchid,  
+                empjoindate:this.EmployeeJoinDate,
+                bankname:this.BankName, 
+                bankaccnum:this.BankAccNumber,  
+                monthlyCTC:this.MonthlyCTC,  
+                annualCTC:this.AnnualCTC,  
+                currencycode:this.ContactCurrency,  
+                manager:this.managerIdselect,   
+                empESI:this.EmployeeCoveredUnderESI,
+                empLWF:this.EmployeeCoveredUnderLWF,
+                empPF:this.EmployeeCoveredUnderPF,  
+                empEPS:this.EmployeeUnderEPS,
+                ifsccode:this.IFSC_Code, 
+                empstatus: this.EmployeeStatus, 
+                taxRegime:this.TaxRegime, 
+                uanNum:this.UANnumber, 
+                panNum:this.PANnumber, 
+                puduId:this.puduIdselect,
+                reportsToselect:this.reportsToselect,
+                status:this.Status, 
+                skill:this.skills,
+                bonusFreq:this.BonusFrequency, 
+                pwd:this.Password, 
+            //    tempAddress:this.template.querySelector("[data-field='temporaryAddressEdit']").value, 
+                language:this.Languages, 
+                personalmail:this.PersonalMail, 
+                fname:this.FirstName, 
+                mname:this.MiddleName, 
+                lname:this.LastName, 
+                acHolderName:this.AccountHolderName, 
+                pfjoindate:this.PFJoinDate, 
+                empmasterid:this.empMasterId,
+                pfNum:this.PFNumber, 
+                aadhar:this.AadharNumber, 
+                probPeriod:this.ProbationPeriod, 
+                resignDate:this.ResignedDate, 
+                leavingDate:this.LeavingDate,
+                empid: this.employeeId, 
+                homephoneval: this.HomePhonevalue,
+                faxval: this.faxnumvalue,
+                permStreet:this.permstreet,
+                permCity:this.city,
+                permCountry:this.country,
+                permPostalcode:this.postalcode,
+                permState:this.province,
+                recordtype:this.recordtypeidval,
+                PfContribution:this.PFContributionValue,
+                relationship:this.Relationship,
+                ESINumber:this.ESINumber,
+                mobile:this.Mobile,
+            };
+            console.log('897');
+            console.log('parameterObject: '+JSON.stringify(parameterObject)); 
+            createContactData({updateContact: parameterObject})
+            .then(data => { 
+                console.log('Success: ' + data) 
+               // this.handleuploaded();
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Success',
+                        message: 'Contact updated',
+                        variant: 'success'
+                    })
+                );
+                this.clientcontactbootcampTrainee=false;
+                this.clientcontact=false;
+                this.bootcampTrainee=false;
+                this.dependent=false;
+                this.freelancePartnerSubcontractors=false;
+                this.isLoading = false;
+                this.showTable = true; 
+                this.NewEmployeeMaster=false;
+                this.rownum=this.rownum+1;
+                this.newEmployeepage=false;
+                let recordtypetemplate=false;
+                const selectEvent = new CustomEvent('mycustomevent', {detail: {
+                    showTable:this.showTable,
+                    rownum:this.rownum,
+                    newemployeemaster:this.NewEmployeeMaster,
+                    recordtypetemplate:recordtypetemplate}});
+                    this.dispatchEvent(selectEvent);
+            })
+            .catch(error=>{
+                console.log('Error updating Data=>',JSON.stringify(error));
+                let err=JSON.stringify(error);
+                let errArray=err.split(',');
+                console.log('error msg=>',errArray[2]);
+                this.isLoading = false;
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Error..!',
+                        message: errArray[2],
+                        variant: 'error'
+                    })
+                );
+            }) 
+        }
+        else {
+            // The form is not valid
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Something is wrong',
+                    message: 'Check your input and try again.',
+                    variant: 'error'
+                })
+            );
+            this.isLoading = false;
+        }
+        
+    }
+
+}
+
+====================================================
+<template>
+    <template if:true={newEmployeepage}>
+        <lightning-card title='New Employee Master detail page' >
+            <b>{recordType}</b>
+            <div class="slds-grid slds-gutters">
+                <div class="slds-col">
+                <span>
+            <template if:true={clientcontactbootcampTrainee}>
+                
+                        <template if:true={bootcampTrainee}>
+                            <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                                <lightning-input label="Employee Id" data-field="EmployeeIdEdit" value={employeeId} name="employeeid" onchange={handleinput}></lightning-input>
+                            </div>
+                        </template>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Salutation" data-field="salutationEdit" value={Salutation} options={salutationOptions}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="First Name" value={FirstNameCon} name="firstname" data-field="FirstNameConEdit" onchange={handleinput}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Last Name" value={LastnameCon} name="lastname" data-field="LastnameConEdit" onchange={handleinput} required></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Email" data-field="EmailEdit" value={Email} name="email" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Probation Period" data-field="ProbationPeriodEdit" value={ProbationPeriod} options={ProbationPeriodOptions} name="probperiod" onchange={handleinput}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Phone" value={Phone} data-field="PhoneEdit" name="phone" onchange={handleinput}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Father's Name" data-field="FatherNameEdit" value={FatherName} name="fathername" onchange={handleinput}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Employee Joining Date" data-field="EmployeeJoinDateEdit" value={EmployeeJoinDate} type="Date" name="empjoindate" onchange={handleinput} required></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Base Branch" data-field="BaseBranchEdit" placeholder={BaseBranch} value={BaseBranch} options={BaseBranchOptions} onchange={handleBaseBranchSelect}></lightning-combobox>
+                        </div>
+            </template>
+        </span>
+    </div>
+        <div class="slds-col">
+        <span>
+                <template if:true={bootcampTrainee}>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Resigned Date" data-field="ResignedDateEdit" value={ResignedDate} type="Date" name="resigneddate" onchange={handleinput}></lightning-input>
+                        <span if:true={endDateValidationMsgTasks} style="color: red;">Resign Date cannot be before Joining Date.</span>                     
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Birthdate" data-field="BirthdateEdit" value={Birthdate} type="Date" name="birthdate" onchange={handleinput}></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Leaving Date" data-field="LeavingDateEdit" value={LeavingDate} type="Date" name="leavingdate" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="PF Join Date" data-field="PFJoinDateEdit" value={PFJoinDate} type="Date" name="pfjoindate" onchange={handleinput}></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Bank Name" data-field="BankNameEdit" value={BankName} name="bankname" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Bank Account Number" data-field="BankAccNumberEdit" value={BankAccNumber} name="bankAcNum" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Account Name" data-field="AccountEdit" placeholder={AccountName} value={AccountName} options={AccountOptions} onchange={handleAccountSelect} required></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="PAN Number" data-field="PANnumberEdit" value={PANnumber} name="pan" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="PF Number" data-field="PFNumberEdit" value={PFNumber} name="pfNum" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="IFSC Code" data-field="IFSC_CodeEdit" value={IFSC_Code} name="ifsccode" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="HomePhone" value={HomePhonevalue} data-field="HomePhoneEdit" ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input-address
+                                 address-label="Permanent Address"
+                                 street-label="Street"
+                                 city-label="City"
+                                 country-label="Country"
+                                 province-label="Province"
+                                 postal-code-label="PostalCode"
+                                 onchange={handleAddress}
+                                 field-level-help="Permanent Address field" ></lightning-input-address>
+                     </div>
+                </template>
+                <template if:true={clientcontact}>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Status" data-field="StatusEdit" value={Status} options={StatusOptions} name="status" onchange={handleinput}></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Employee Number" data-field="EmployeeNoEdit" name="empNumber" onchange={handleinput} placeholder={EmployeeNo} value={EmployeeNo}  ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Reports To" data-field="ReportsToEdit" placeholder={ReportsTo} value={ReportsTo} options={ReportsToOptions} onchange={handleReportsTo}></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Account Name" data-field="AccountEdit" placeholder={AccountName} value={AccountName} options={AccountOptions} onchange={handleAccountSelect}></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Related PU/DU" data-field="puduEdit" placeholder={pudu} value={pudu} options={PUDUOptions} onchange={handleRelatedPUDU}></lightning-combobox>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Role" data-field="RoleEdit" value={Role} options={RoleOptions} name="role" onchange={handleinput}></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Annual CTC" data-field="AnnualCTCEdit" value={AnnualCTC} name="annCtc" onchange={handlecurrency} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Designation" data-field="DesignationEdit" value={Designation} options={DesignationOptions} name="designation" onchange={handleinput}></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Contact Currency" data-field="ContactCurrencyEdit" placeholder="INR - Indian Rupee" value={ContactCurrency} options={ContactCurrencyOptions} name="contactCurrency" onchange={handleinput} required></lightning-combobox>
+                    </div>
+                </template>
+            </span>
+        </div>
+        </div>
+            <template if:true={employeeCandidate}>
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col">
+                    <span>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Salutation" data-field="salutationEdit" value={Salutation} options={salutationOptions}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="First Name" value={FirstNameCon} name="firstname" data-field="FirstNameConEdit" onchange={handleinput}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Last Name" value={LastnameCon} name="lastname" data-field="LastnameConEdit" onchange={handleinput} required></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Account Name" data-field="AccountEdit" placeholder={AccountName} value={AccountName} options={AccountOptions} onchange={handleAccountSelect}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Mobile" value={Mobile} data-field="MobileEdit" name="Mobile" onchange={handleinput}></lightning-input>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            Active<lightning-helptext content="Set to true, inorder to Generate Payslips"></lightning-helptext>
+                            <lightning-input type="checkbox" name="active" checked={Active} onchange={handleCheckbox}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Employee Number" data-field="EmployeeNoEdit" name="empNumber" onchange={handleinput} placeholder={EmployeeNo} value={EmployeeNo}  ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Employee Joining Date" data-field="EmployeeJoinDateEdit" value={EmployeeJoinDate} type="Date" name="empjoindate" onchange={handleinput} required></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Email" data-field="EmailEdit" value={Email} name="email" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Role" data-field="RoleEdit" value={Role} options={RoleOptions} name="role" onchange={handleinput} required></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Phone" value={Phone} data-field="PhoneEdit" name="phone" onchange={handleinput}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Bank Name" data-field="BankNameEdit" value={BankName} name="bankname" onchange={handleinput}  ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Bank Account Number" data-field="BankAccNumberEdit" value={BankAccNumber} name="bankAcNum" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Office Location" data-field="OfficeLocationEdit" value={OfficeLocation} name="ofclocation" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Designation" data-field="DesignationEdit" value={Designation} options={DesignationOptions} name="designation" onchange={handleinput}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Annual CTC" data-field="AnnualCTCEdit" value={AnnualCTC} name="annCtc" onchange={handlecurrency} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Bonus Frequency" data-field="BonusFrequencyEdit" value={BonusFrequency} options={BonusFrequencyOptions} name="bonusfreq" onchange={handleinput}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Contact Currency" data-field="ContactCurrencyEdit" placeholder="INR - Indian Rupee" value={ContactCurrency} options={ContactCurrencyOptions} name="contactCurrency" onchange={handleinput} required></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Gender" data-field="GenderEdit" value={Gender} options={GenderOptions} name="gender" onchange={handleinput}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Birthdate" data-field="BirthdateEdit" value={Birthdate} type="Date" name="birthdate" onchange={handleinput}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input-address
+                                     address-label="Temporary Address"
+                                     street-label="Other Street"
+                                     city-label="Other City"
+                                     country-label="Other Country"
+                                     province-label="Other State/Province"
+                                     postal-code-label="Other Zip/PostalCode"
+                                     onchange={handleAddress}></lightning-input-address>
+                         </div>
+                         <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Languages" data-field="LanguagesEdit" value={Languages} name="langs" onchange={handleinput}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Personal Mail" data-field="PersonalMailEdit" value={PersonalMail} name="persEmail" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="First Name" data-field="FirstNameEdit" value={FirstName} name="firstnametwo" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="MiddleName" data-field="MiddleNameEdit" value={MiddleName} name="middlenametwo" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Last Name" data-field="LastNameEdit" value={LastName} name="lastnametwo" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Father's Name" data-field="FatherNameEdit" value={FatherName} name="fathername" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Marital Status" data-field="MaritalStatusEdit" value={MaritalStatus} options={MaritalStatusOptions} name="maritalstatus" onchange={handleinput}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Manager" data-field="ManagerEdit" placeholder={Manager} value={Manager} options={ManagerOptions} onchange={handleManagerSelect}></lightning-combobox>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="AccountHolder Name" data-field="AccountHolderNameEdit" value={AccountHolderName} name="AcHoldername" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Base Branch" data-field="BaseBranchEdit" placeholder={BaseBranch} value={BaseBranch} options={BaseBranchOptions} onchange={handleBaseBranchSelect}></lightning-combobox>
+                        </div>
+                        </span>
+                        </div>
+                <div class="slds-col">
+                    <span>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Tax Regime" data-field="TaxRegimeEdit" value={TaxRegime} options={TaxRegimeOptions} name="taxregime" onchange={handleinput} required></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="UAN Number" data-field="UANnumberEdit" value={UANnumber} name="uan" onchange={handleinput} ></lightning-input>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="PF Join Date" data-field="PFJoinDateEdit" value={PFJoinDate} type="Date" name="pfjoindate" onchange={handleinput}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="PAN Number" data-field="PANnumberEdit" value={PANnumber} name="pan" onchange={handleinput} ></lightning-input>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="PF Number" data-field="PFNumberEdit" value={PFNumber} name="pfNum" onchange={handleinput} ></lightning-input>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="PF Contribution" value={PFContributionValue} name="pfCont" options={PFContributionOptions} read-only={PfContribution} onchange={handleinput}></lightning-combobox>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Related PU/DU" data-field="puduEdit" placeholder={pudu} value={pudu} options={PUDUOptions} onchange={handleRelatedPUDU}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Reports To" data-field="ReportsToEdit" placeholder={ReportsTo} value={ReportsTo} options={ReportsToOptions} onchange={handleReportsTo}></lightning-combobox>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Status" data-field="StatusEdit" value={Status} options={StatusOptions} name="status" onchange={handleinput}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Contact Record Type" value={ContactRecordType} readonly="true" ></lightning-input>
+                        </div>
+                        
+                        
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Aadhar Number" data-field="AadharNumberEdit" value={AadharNumber} name="aadhar" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <p>Employee Covered Under ESI</p>
+                            <lightning-input type="checkbox" checked={EmployeeCoveredUnderESI} name="EmployeeUnderESI" onchange={handleCheckbox}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <p>Employee Covered Under LWF</p>
+                            <lightning-input type="checkbox" checked={EmployeeCoveredUnderLWF} name="EmployeeUnderLWF" onchange={handleCheckbox}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <p>Employee Covered Under PF</p>
+                            <lightning-input type="checkbox" name="EmployeeUnderPF" checked={EmployeeCoveredUnderPF} onchange={handleCheckbox}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <p>Employee Under EPS</p>
+                            <lightning-input type="checkbox" name="EmployeeUnderEPS" checked={EmployeeUnderEPS} onchange={handleCheckbox}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="ESI Number" data-field="ESINumEdit" value={ESINumber} name="ESINumber" onchange={handleinput} ></lightning-input>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="IFSC Code" data-field="IFSC_CodeEdit" value={IFSC_Code} name="ifsccode" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Employee Status" data-field="EmployeeStatusEdit" value={EmployeeStatus} options={EmpStatusOptions} name="empstatus" onchange={handleinput}> </lightning-combobox>
+                        </div>
+                        
+                         <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Probation Period" data-field="ProbationPeriodEdit" value={ProbationPeriod} options={ProbationPeriodOptions} name="probperiod" onchange={handleinput}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Resigned Date" data-field="ResignedDateEdit" value={ResignedDate} type="Date" name="resigneddate" onchange={handleinput}></lightning-input>
+                            <span if:true={endDateValidationMsgTasks} style="color: red;">End Date cannot be before Start Date.</span>                     
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Leaving Date" data-field="LeavingDateEdit" value={LeavingDate} type="Date" name="leavingdate" onchange={handleinput} ></lightning-input>
+                            <span if:true={leavingDateValidation} style="color: red;">Leaving Date cannot be before Resign Date.</span>                     
+                        </div>
+                        
+                    </span>
+                    </div>
+                    </div>
+            </template>
+            <template if:true={dependent}>
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col">
+                    <span>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Salutation" data-field="salutationEdit" value={Salutation} options={salutationOptions}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="First Name" value={FirstNameCon} name="firstname" data-field="FirstNameConEdit" onchange={handleinput}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Last Name" value={LastnameCon} name="lastname" data-field="LastnameConEdit" onchange={handleinput} required></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="First Name" data-field="FirstNameEdit" value={FirstName} name="firstnametwo" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="MiddleName" data-field="MiddleNameEdit" value={MiddleName} name="middlenametwo" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Last Name" data-field="LastNameEdit" value={LastName} name="lastnametwo" onchange={handleinput} ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Employee Master" data-field="EmployeeMasterRecEdit" placeholder={EmployeeMasterRec} value={EmployeeMasterRec} options={ReportsToOptions} onchange={handleEmployeeMaster}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Gender" data-field="GenderEdit" value={Gender} options={GenderOptions} name="gender" onchange={handleinput}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Employee Number" data-field="EmployeeNoEdit" name="empNumber" onchange={handleinput} placeholder={EmployeeNo} value={EmployeeNo}  ></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Birthdate" data-field="BirthdateEdit" value={Birthdate} type="Date" name="birthdate" onchange={handleinput}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Relationship" data-field="RelationshipEdit" value={Relationship} options={RelationshipOptions} name="Relationship" onchange={handleinput}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-combobox label="Base Branch" data-field="BaseBranchEdit" placeholder={BaseBranch} value={BaseBranch} options={BaseBranchOptions} onchange={handleBaseBranchSelect}></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                            <lightning-input label="Employee Joining Date" data-field="EmployeeJoinDateEdit" value={EmployeeJoinDate} type="Date" name="empjoindate" onchange={handleinput} required></lightning-input>
+                        </div>
+                        
+                      </span>
+                      <div class="slds-col">
+                        <span>
+                            <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                                <lightning-combobox label="Account Name" data-field="AccountEdit" placeholder={AccountName} value={AccountName} options={AccountOptions} onchange={handleAccountSelect}></lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                                <lightning-combobox label="Probation Period" data-field="ProbationPeriodEdit" value={ProbationPeriod} options={ProbationPeriodOptions} name="probperiod" onchange={handleinput}></lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                                <lightning-input label="Father's Name" data-field="FatherNameEdit" value={FatherName} name="fathername" onchange={handleinput} ></lightning-input>
+                            </div>
+                            
+                           
+                            
+                            
+                            <!--div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                                <lightning-input label="Zone" value={Zone} readonly="true" ></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                                <lightning-input label="Area" value={Area} readonly="true" ></lightning-input>
+                            </div-->
+                            
+                        </span>
+                      </div>
+                    </div>
+                </div>
+            </template>
+            <template if:true={freelancePartnerSubcontractors}>
+            <div class="slds-grid slds-gutters">
+                <div class="slds-col">
+                <span>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Employee Id" data-field="EmployeeIdEdit" value={employeeId} ></lightning-input>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Salutation" data-field="salutationEdit" value={Salutation} options={salutationOptions}></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="First Name" value={FirstNameCon} name="firstname" data-field="FirstNameConEdit" onchange={handleinput}></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Last Name" value={LastnameCon} name="lastname" data-field="LastnameConEdit" onchange={handleinput} required></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Birthdate" data-field="BirthdateEdit" value={Birthdate} type="Date" name="birthdate" onchange={handleinput}></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Father's Name" data-field="FatherNameEdit" value={FatherName} name="fathername" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Email" data-field="EmailEdit" value={Email} name="email" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Phone" value={Phone} data-field="PhoneEdit" name="phone" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Base Branch" data-field="BaseBranchEdit" placeholder={BaseBranch} value={BaseBranch} options={BaseBranchOptions} onchange={handleBaseBranchSelect}></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Bank Name" data-field="BankNameEdit" value={BankName} name="bankname" onchange={handleinput}  ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Bank Account Number" data-field="BankAccNumberEdit" value={BankAccNumber} name="bankAcNum" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Account Name" data-field="AccountEdit" placeholder={AccountName} value={AccountName} options={AccountOptions} onchange={handleAccountSelect} required></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="HomePhone" value={HomePhone} name="HomePhone" data-field="HomePhoneEdit" onchange={handleinput}></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                       <lightning-input-address
+                                address-label="Permanent Address"
+                                street-label="Mailing Street"
+                                city-label="Mailing City"
+                                country-label="Mailing Country"
+                                province-label="Mailing State/Province"
+                                postal-code-label="Mailing Zip/PostalCode"
+                                
+                                onchange={handleAddress}></lightning-input-address>
+                        
+                    </div>
+                    
+                    <!--div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Zone" value={Zone} readonly="true" ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Area" value={Area} readonly="true" ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="CloudTaru Experience" value={CloudTaruExperience} readonly="true" ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Total Past Experience" value={TotalPastExperience} readonly="true" ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Overall Experience" value={OverallExperience} readonly="true" ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Total Number Of Projects" value={TotalNumOfProjects} readonly="true" ></lightning-input>
+                    </div-->
+                    
+                   
+                </span>
+                </div>
+                <div class="slds-col">
+                <span>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Employee Joining Date" data-field="EmployeeJoinDateEdit" value={EmployeeJoinDate} type="Date" name="empjoindate" onchange={handleinput} required></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Resigned Date" data-field="ResignedDateEdit" value={ResignedDate} type="Date" name="resigneddate" onchange={handleinput}></lightning-input>
+                        <span if:true={endDateValidationMsgTasks} style="color: red;">End Date cannot be before Start Date.</span>                     
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Leaving Date" data-field="LeavingDateEdit" value={LeavingDate} type="Date" name="leavingdate" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-combobox label="Probation Period" data-field="ProbationPeriodEdit" value={ProbationPeriod} options={ProbationPeriodOptions} name="probperiod" onchange={handleinput}></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="PF Join Date" data-field="PFJoinDateEdit" value={PFJoinDate} type="Date" name="pfjoindate" onchange={handleinput}></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="PAN Number" data-field="PANnumberEdit" value={PANnumber} name="pan" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="PF Number" data-field="PFNumberEdit" value={PFNumber} name="pfNum" onchange={handleinput} ></lightning-input>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="IFSC Code" data-field="IFSC_CodeEdit" value={IFSC_Code} name="ifsccode" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <!--div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Languages" data-field="LanguagesEdit" value={Languages} name="langs" onchange={handleinput} ></lightning-input>
+                    </div-->
+                    <!--div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="First Name" data-field="FirstNameEdit" value={FirstName} name="firstnametwo" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="MiddleName" data-field="MiddleNameEdit" value={MiddleName} name="middlenametwo" onchange={handleinput} ></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Last Name" data-field="LastNameEdit" value={LastName} name="lastnametwo" onchange={handleinput} ></lightning-input>
+                    </div-->
+                    <!--div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="AccountHolder Name" data-field="AccountHolderNameEdit" value={AccountHolderName} name="AcHoldername" onchange={handleinput} ></lightning-input>
+                    </div-->
+                    
+                    
+                    
+                    <!--div class="slds-col slds-size_1-of-2 slds-p-left_xx-large">
+                        <lightning-input label="Fax" name="fax" value={faxnum} data-field="FaxEdit" onchange={handleinput}></lightning-input>
+                    </div-->
+                    
+                </span>
+                </div>
+                </div>
+                </template>
+                <button class="slds-button slds-button_brand" onclick={handleSave} title="Save">Save</button>&nbsp;&nbsp;
+            
+                <div class="spinner">
+                    <template if:true={isLoading}>
+                         <lightning-spinner alternative-text="Loading" variant="brand" size="large">
+                         </lightning-spinner>
+                    </template>
+                </div>
+
+        </lightning-card>
+    </template>
+</template>
